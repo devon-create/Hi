@@ -30,6 +30,7 @@ final class ScanStore: ObservableObject {
     func remove(_ scan: Scan) {
         scans.removeAll { $0.id == scan.id }
         if let mesh = scan.meshURL { try? FileManager.default.removeItem(at: mesh) }
+        if let usdz = scan.usdzURL { try? FileManager.default.removeItem(at: usdz) }
         if let video = scan.videoURL { try? FileManager.default.removeItem(at: video) }
         save()
     }

@@ -1,15 +1,47 @@
 import ARKit
 import Foundation
+import ModelIO
 import simd
 
 enum MeshExporter {
     struct Result {
+        let objURL: URL
+        let usdzURL: URL?
+        let vertexCount: Int
+        let triangleCount: Int
+    }
+
+    static func export(meshAnchors: [ARMeshAnchor], scanID: UUID) throws -> Result {
+        let obj = try exportOBJ(meshAnchors: meshAnchors, scanID: scanID)
+        let usdz = try? convertOBJToUSDZ(objURL: obj.url, scanID: scanID)
+        return Result(
+            objURL: obj.url,
+            usdzURL: usdz,
+            vertexCount: obj.vertexCount,
+            triangleCount: obj.triangleCount
+        )
+    }
+
+    static func convertOBJToUSDZ(objURL: URL, scanID: UUID) throws -> URL {
+        let asset = MDLAsset(url: objURL)
+        let usdzURL = ScanStore.scansDirectory.appendingPathComponent("\(scanID.uuidString).usdz")
+        if FileManager.default.fileExists(atPath: usdzURL.path) {
+            try FileManager.default.removeItem(at: usdzURL)
+        }
+        guard MDLAsset.canExportFileExtension("usdz") else {
+            throw NSError(domain: "MeshExporter", code: 2, userInfo: [NSLocalizedDescriptionKey: "USDZ export not supported on this OS"])
+        }
+        try asset.export(to: usdzURL)
+        return usdzURL
+    }
+
+    private struct OBJResult {
         let url: URL
         let vertexCount: Int
         let triangleCount: Int
     }
 
-    static func exportOBJ(meshAnchors: [ARMeshAnchor], scanID: UUID) throws -> Result {
+    private static func exportOBJ(meshAnchors: [ARMeshAnchor], scanID: UUID) throws -> OBJResult {
         let url = ScanStore.scansDirectory.appendingPathComponent("\(scanID.uuidString).obj")
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
@@ -64,7 +96,7 @@ enum MeshExporter {
             totalTriangles += faceCount
         }
 
-        return Result(url: url, vertexCount: totalVertices, triangleCount: totalTriangles)
+        return OBJResult(url: url, vertexCount: totalVertices, triangleCount: totalTriangles)
     }
 
     private static func write(_ handle: FileHandle, _ string: String) {

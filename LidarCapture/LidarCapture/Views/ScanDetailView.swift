@@ -8,6 +8,8 @@ struct ScanDetailView: View {
     @State private var renamedTitle: String
     @State private var showShare = false
     @State private var quickLookURL: URL?
+    @State private var bundleShareURL: URL?
+    @State private var bundleError: String?
 
     init(scan: Scan) {
         self.scan = scan
@@ -53,11 +55,18 @@ struct ScanDetailView: View {
                 } label: {
                     Label("Export files", systemImage: "square.and.arrow.up")
                 }
+                Button {
+                    makeWebBundle()
+                } label: {
+                    Label("Export web bundle (.zip)", systemImage: "globe")
+                }
                 Button(role: .destructive) {
                     store.remove(scan)
                 } label: {
                     Label("Delete scan", systemImage: "trash")
                 }
+            } footer: {
+                Text("The web bundle is a zip with mesh.obj, mesh.usdz, video.mp4 and meta.json. Drop it into your repo's docs/scans/ folder, run the indexer, and push to publish on GitHub Pages.")
             }
         }
         .navigationTitle(renamedTitle.isEmpty ? scan.name : renamedTitle)
@@ -65,17 +74,44 @@ struct ScanDetailView: View {
         .sheet(isPresented: $showShare) {
             ShareSheet(items: shareItems)
         }
+        .sheet(item: Binding(
+            get: { bundleShareURL.map(IdentifiableURL.init) },
+            set: { bundleShareURL = $0?.url }
+        )) { wrapper in
+            ShareSheet(items: [wrapper.url])
+        }
+        .alert("Bundle failed", isPresented: Binding(
+            get: { bundleError != nil },
+            set: { if !$0 { bundleError = nil } }
+        )) {
+            Button("OK", role: .cancel) { bundleError = nil }
+        } message: {
+            Text(bundleError ?? "")
+        }
         .quickLookPreview($quickLookURL)
     }
 
+    private func makeWebBundle() {
+        do {
+            bundleShareURL = try BundleBuilder.makeBundle(for: scan)
+        } catch {
+            bundleError = error.localizedDescription
+        }
+    }
+
     private var shareItems: [Any] {
-        [scan.meshURL, scan.videoURL].compactMap { $0 }
+        [scan.meshURL, scan.usdzURL, scan.videoURL].compactMap { $0 }
     }
 
     private func durationString(_ seconds: TimeInterval) -> String {
         let total = Int(seconds.rounded())
         return String(format: "%d:%02d", total / 60, total % 60)
     }
+}
+
+private struct IdentifiableURL: Identifiable {
+    let url: URL
+    var id: String { url.absoluteString }
 }
 
 struct ShareSheet: UIViewControllerRepresentable {

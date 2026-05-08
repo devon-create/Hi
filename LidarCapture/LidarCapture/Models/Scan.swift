@@ -9,10 +9,15 @@ struct Scan: Identifiable, Codable, Hashable {
     var vertexCount: Int
     var triangleCount: Int
     var meshFileName: String?
+    var usdzFileName: String?
     var videoFileName: String?
 
     var meshURL: URL? {
         meshFileName.map { ScanStore.scansDirectory.appendingPathComponent($0) }
+    }
+
+    var usdzURL: URL? {
+        usdzFileName.map { ScanStore.scansDirectory.appendingPathComponent($0) }
     }
 
     var videoURL: URL? {

@@ -117,16 +117,19 @@ final class ScanCoordinator: NSObject, ObservableObject {
         let videoURL = await recorder.finish()
 
         let meshURL: URL?
+        let usdzURL: URL?
         let vertexCount: Int
         let triangleCount: Int
         do {
-            let exported = try MeshExporter.exportOBJ(meshAnchors: meshAnchors, scanID: id)
-            meshURL = exported.url
+            let exported = try MeshExporter.export(meshAnchors: meshAnchors, scanID: id)
+            meshURL = exported.objURL
+            usdzURL = exported.usdzURL
             vertexCount = exported.vertexCount
             triangleCount = exported.triangleCount
         } catch {
             await MainActor.run { self.lastError = "Mesh export failed: \(error.localizedDescription)" }
             meshURL = nil
+            usdzURL = nil
             vertexCount = 0
             triangleCount = 0
         }
@@ -140,6 +143,7 @@ final class ScanCoordinator: NSObject, ObservableObject {
             vertexCount: vertexCount,
             triangleCount: triangleCount,
             meshFileName: meshURL?.lastPathComponent,
+            usdzFileName: usdzURL?.lastPathComponent,
             videoFileName: videoURL?.lastPathComponent
         )
 
