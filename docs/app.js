@@ -66,7 +66,7 @@ function escapeHTML(s) {
 
 async function load() {
     try {
-        const res = await fetch("./scans.json", { cache: "no-cache" });
+        const res = await fetch("./scans.json");
         if (!res.ok) throw new Error(`scans.json not found (${res.status})`);
         const data = await res.json();
         const scans = Array.isArray(data) ? data : (data.scans || []);

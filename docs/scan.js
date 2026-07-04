@@ -1,7 +1,3 @@
-import * as THREE from "three";
-import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
-import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-
 const params = new URLSearchParams(location.search);
 const scanID = params.get("id");
 const errorEl = document.getElementById("error");
@@ -39,7 +35,7 @@ async function load() {
     }
     let manifest;
     try {
-        const res = await fetch("./scans.json", { cache: "no-cache" });
+        const res = await fetch("./scans.json");
         if (!res.ok) throw new Error(`scans.json (${res.status})`);
         const data = await res.json();
         const scans = Array.isArray(data) ? data : (data.scans || []);
@@ -95,6 +91,14 @@ async function load() {
 }
 
 async function loadMesh(url) {
+    // three.js is only fetched/parsed when a scan actually has a mesh; the
+    // modulepreload hints in scan.html warm these requests in parallel.
+    const [THREE, { OBJLoader }, { OrbitControls }] = await Promise.all([
+        import("three"),
+        import("three/addons/loaders/OBJLoader.js"),
+        import("three/addons/controls/OrbitControls.js")
+    ]);
+
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputColorSpace = THREE.SRGBColorSpace;

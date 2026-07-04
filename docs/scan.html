@@ -9,11 +9,14 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three@0.161.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.161.0/examples/jsm/"
+            "three": "./vendor/three/three.module.min.js",
+            "three/addons/": "./vendor/three/addons/"
         }
     }
     </script>
+    <link rel="modulepreload" href="./vendor/three/three.module.min.js">
+    <link rel="modulepreload" href="./vendor/three/addons/loaders/OBJLoader.js">
+    <link rel="modulepreload" href="./vendor/three/addons/controls/OrbitControls.js">
 </head>
 <body>
     <div class="shell">

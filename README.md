@@ -48,6 +48,7 @@ The app gracefully falls back to a "LiDAR not available" message on devices with
 │   ├── app.js                     # Library logic
 │   ├── scan.js                    # OBJ viewer + AR Quick Look
 │   ├── scans.json                 # Auto-generated index
+│   ├── vendor/three/              # Vendored three.js r161 (minified build + OBJLoader + OrbitControls)
 │   └── scans/<id>/                # One folder per scan: mesh.obj, mesh.usdz, video.mp4, meta.json
 ├── tools/
 │   └── build-scan-index.mjs       # Rebuilds docs/scans.json
@@ -120,7 +121,7 @@ The viewer fetches `scans.json` and the per-scan files relatively, so it works o
   - Lights it with one ambient + one white key light + one Mercury-green rim light, sitting on a faint grid floor.
   - Plays the walkthrough as an HTML5 `<video>`.
   - On iOS, surfaces a **View in AR** button using the USDZ via `<a rel="ar">` (Apple's AR Quick Look).
-- **No backend, no build step.** three.js is loaded from a CDN via an import map; the page is just static files.
+- **No backend, no build step.** three.js (r161, minified build + the two addons the viewer uses) is vendored under `docs/vendor/three/` and wired up via an import map, so the page is just static same-origin files with no CDN dependency. three.js itself is lazy-loaded only when a scan has a mesh, so the page metadata renders immediately. To upgrade three.js, download the new `three-<version>.tgz` from `registry.npmjs.org` and replace `three.module.min.js`, `addons/loaders/OBJLoader.js`, and `addons/controls/OrbitControls.js`.
 
 ## How a scan is built (iOS)
 
